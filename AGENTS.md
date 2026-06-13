@@ -33,7 +33,7 @@ Then open http://localhost:3000.
 
 ## Persistence
 
-**TO BE DECIDED.** The persistence mechanism has not been chosen yet — there will be a separate consultation about it before any persistence code is written. Do **not** assume `localStorage` or any other mechanism. Wait for the decision.
+Documents persist in the browser using **raw IndexedDB** — no wrapper library, one record per document keyed by id. Full reasoning (and why the theme preference uses `localStorage` instead) is recorded in `REFLECTION.md`.
 
 ## Conventions
 
@@ -45,6 +45,6 @@ Then open http://localhost:3000.
 ## Rules for you (the agent)
 
 - Do **not** add any new libraries or dependencies without asking first.
-- Do **not** assume a persistence mechanism — wait for the consultation decision.
+- Persistence is decided — **raw IndexedDB** for documents (see *Persistence* above and `REFLECTION.md`).
 - Do **not** put secrets or API keys in source files. This project has none, but the habit matters.
 - The person directing you is a **non-coder**. When proposing changes, briefly explain the design and technical decisions in plain language.
