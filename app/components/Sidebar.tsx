@@ -24,6 +24,14 @@ export default function Sidebar() {
   // Timestamp of the last create, for the cooldown guard below.
   const lastCreateRef = useRef(0);
 
+  // Local, instant search. Pure view state — filters the already-loaded list
+  // by title; no IndexedDB query or re-fetch.
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? documents.filter((d) => d.title.toLowerCase().includes(q))
+    : documents;
+
   useEffect(() => {
     setNavigating(false);
   }, [activeSegment]);
@@ -65,9 +73,26 @@ export default function Sidebar() {
         >
           New Document
         </button>
+
+        {/* Search — only shown once there are documents to filter */}
+        {status === "ready" && documents.length > 0 && (
+          <>
+            <label htmlFor="doc-search" className="sr-only">
+              Search documents
+            </label>
+            <input
+              id="doc-search"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search documents"
+              className="h-9 w-full rounded-md border border-black/[.08] bg-transparent px-3 text-sm outline-none placeholder:text-zinc-400 focus:border-black/[.2] dark:border-white/[.145] dark:placeholder:text-zinc-600 dark:focus:border-white/[.3]"
+            />
+          </>
+        )}
       </div>
 
-      {/* Document list — loading / empty / error / list states */}
+      {/* Document list — loading / empty / error / no-match / list states */}
       <div className="flex-1 overflow-y-auto px-3 py-4">
         {status === "loading" && (
           <p className="px-2 text-sm text-zinc-500 dark:text-zinc-400">
@@ -87,9 +112,15 @@ export default function Sidebar() {
           </p>
         )}
 
-        {status === "ready" && documents.length > 0 && (
+        {status === "ready" && documents.length > 0 && filtered.length === 0 && (
+          <p className="px-2 text-sm text-zinc-500 dark:text-zinc-400">
+            No documents match your search
+          </p>
+        )}
+
+        {status === "ready" && filtered.length > 0 && (
           <ul className="flex flex-col gap-0.5">
-            {documents.map((doc) => {
+            {filtered.map((doc) => {
               const isActive = doc.id === activeSegment;
               return (
                 <li key={doc.id}>
