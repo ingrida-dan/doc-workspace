@@ -40,7 +40,7 @@ export default function ThemeToggle() {
       ref={groupRef}
       role="radiogroup"
       aria-label="Theme"
-      className="flex gap-0.5 rounded-md border border-black/[.08] p-0.5 dark:border-white/[.145]"
+      className="flex gap-0.5 rounded-md border border-border p-0.5"
     >
       {OPTIONS.map(({ value, label }, index) => {
         const isActive = active === value;
@@ -57,8 +57,8 @@ export default function ThemeToggle() {
             onKeyDown={(e) => onKeyDown(e, index)}
             className={`flex-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
               isActive
-                ? "bg-black/[.06] dark:bg-white/[.12]"
-                : "text-zinc-500 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]"
+                ? "bg-foreground/[.06] text-foreground"
+                : "text-muted hover:bg-foreground/[.04]"
             }`}
           >
             {label}

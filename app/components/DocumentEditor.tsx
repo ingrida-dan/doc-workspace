@@ -161,7 +161,7 @@ export default function DocumentEditor({ id }: { id: string }) {
   if (loadStatus === "loading") {
     return (
       <div className="flex flex-1 items-center justify-center px-6 py-16">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>
+        <p className="text-sm text-muted">Loading…</p>
       </div>
     );
   }
@@ -172,11 +172,13 @@ export default function DocumentEditor({ id }: { id: string }) {
         ? "Document not found"
         : "Couldn't load this document.";
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-        <p className="text-base font-medium">{message}</p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+        <p className="font-serif text-2xl font-semibold tracking-tight">
+          {message}
+        </p>
         <Link
           href="/docs"
-          className="text-sm text-zinc-500 underline underline-offset-4 hover:text-foreground dark:text-zinc-400"
+          className="text-sm text-accent underline underline-offset-4 hover:opacity-80"
         >
           Back to workspace
         </Link>
@@ -187,7 +189,7 @@ export default function DocumentEditor({ id }: { id: string }) {
   return (
     <div className="flex flex-1 flex-col">
       {/* Editor header: title field + save indicator */}
-      <div className="flex items-center gap-4 border-b border-black/[.08] px-6 py-4 dark:border-white/[.145]">
+      <div className="flex items-center gap-4 border-b border-border px-6 py-4">
         <input
           type="text"
           value={title}
@@ -195,11 +197,17 @@ export default function DocumentEditor({ id }: { id: string }) {
           onKeyDown={onTitleKeyDown}
           placeholder="Untitled"
           aria-label="Document title"
-          className="min-w-0 flex-1 bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+          className="min-w-0 flex-1 bg-transparent font-serif text-2xl font-semibold tracking-tight outline-none placeholder:text-muted"
         />
         <span
           aria-live="polite"
-          className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400"
+          className={`shrink-0 text-xs ${
+            saveStatus === "saved"
+              ? "text-accent"
+              : saveStatus === "error"
+                ? "text-red-600 dark:text-red-400"
+                : "text-muted"
+          }`}
         >
           {saveStatus === "saving" && "Saving…"}
           {saveStatus === "saved" && "Saved"}
@@ -210,7 +218,7 @@ export default function DocumentEditor({ id }: { id: string }) {
         {/* Delete — destructive, kept visually distinct from the edit fields */}
         {confirming ? (
           <div className="flex shrink-0 items-center gap-2 text-sm">
-            <span className="text-zinc-500 dark:text-zinc-400">Delete?</span>
+            <span className="text-muted">Delete?</span>
             <button
               type="button"
               onClick={handleConfirmDelete}
@@ -221,7 +229,7 @@ export default function DocumentEditor({ id }: { id: string }) {
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="rounded-md px-2.5 py-1 text-xs font-medium text-zinc-500 transition-colors hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]"
+              className="rounded-md px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-foreground/[.05]"
             >
               Cancel
             </button>
@@ -238,7 +246,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       </div>
 
       {/* Edit / Preview toggle for the body */}
-      <div className="flex shrink-0 gap-1 border-b border-black/[.08] px-6 py-2 dark:border-white/[.145]">
+      <div className="flex shrink-0 gap-1 border-b border-border px-6 py-2">
         {(["edit", "preview"] as const).map((m) => (
           <button
             key={m}
@@ -247,8 +255,8 @@ export default function DocumentEditor({ id }: { id: string }) {
             aria-pressed={mode === m}
             className={`rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-colors ${
               mode === m
-                ? "bg-black/[.06] dark:bg-white/[.10]"
-                : "text-zinc-500 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]"
+                ? "bg-foreground/[.06] text-foreground"
+                : "text-muted hover:bg-foreground/[.04]"
             }`}
           >
             {m}
@@ -264,7 +272,7 @@ export default function DocumentEditor({ id }: { id: string }) {
           onChange={(e) => onBodyChange(e.target.value)}
           placeholder="Start writing…"
           aria-label="Document body"
-          className="flex-1 resize-none bg-transparent px-6 py-5 font-mono text-sm leading-6 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+          className="flex-1 resize-none bg-transparent px-6 py-5 font-mono text-sm leading-6 outline-none placeholder:text-muted"
         />
       ) : (
         <div className="markdown-preview flex-1 overflow-y-auto px-6 py-5 text-sm leading-6">

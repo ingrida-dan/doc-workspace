@@ -50,14 +50,14 @@ export default function WorkspaceShell({
   return (
     <div className="flex flex-1 flex-col md:flex-row md:min-h-0">
       {/* Mobile top bar — menu toggle + app name (hidden on desktop) */}
-      <div className="flex items-center gap-3 border-b border-black/[.08] px-4 py-3 md:hidden dark:border-white/[.145]">
+      <div className="flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:hidden">
         <button
           type="button"
           onClick={() => setIsSidebarOpen(true)}
           aria-label="Open document list"
           aria-expanded={isSidebarOpen}
           aria-controls="workspace-sidebar"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-black/[.08] transition-colors hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-white/[.06]"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border transition-colors hover:bg-foreground/[.05]"
         >
           {/* Hamburger icon */}
           <svg
@@ -75,7 +75,7 @@ export default function WorkspaceShell({
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <span className="text-sm font-semibold tracking-tight">
+        <span className="font-serif text-base font-semibold tracking-tight">
           Doc Workspace
         </span>
       </div>
@@ -94,7 +94,7 @@ export default function WorkspaceShell({
         id="workspace-sidebar"
         aria-label="Sidebar"
         inert={isDrawerHidden}
-        className={`fixed inset-y-0 left-0 z-40 w-72 transform border-r border-black/[.08] bg-background transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0 dark:border-white/[.145] ${
+        className={`fixed inset-y-0 left-0 z-40 w-72 transform border-r border-border bg-surface transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist_Mono, Inter } from "next/font/google";
 import ThemeProvider from "@/app/components/ThemeProvider";
 import "./globals.css";
 
@@ -9,8 +9,14 @@ import "./globals.css";
 // OS preference. Keep in sync with ThemeProvider (THEME_STORAGE_KEY).
 const NO_FLASH_THEME_SCRIPT = `(function(){var t;try{t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}catch(e){t='light';}try{var c=localStorage.getItem('theme');if(c==='light'||c==='dark')t=c;}catch(e){}document.documentElement.setAttribute('data-theme',t);})();`;
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Inter for UI/body, Fraunces for display/headings, Geist Mono for code.
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
 });
 
@@ -34,7 +40,7 @@ export default function RootLayout({
       lang="en"
       data-theme="light"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />

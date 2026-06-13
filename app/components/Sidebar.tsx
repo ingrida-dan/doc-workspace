@@ -65,8 +65,8 @@ export default function Sidebar() {
   return (
     <div className="flex h-full flex-col">
       {/* Header area: app name + New Document action */}
-      <div className="flex flex-col gap-3 border-b border-black/[.08] px-5 py-4 dark:border-white/[.145]">
-        <h1 className="text-base font-semibold tracking-tight">
+      <div className="flex flex-col gap-3 border-b border-border px-5 py-5">
+        <h1 className="font-serif text-lg font-semibold tracking-tight">
           Doc Workspace
         </h1>
         <ThemeToggle />
@@ -74,7 +74,7 @@ export default function Sidebar() {
           type="button"
           onClick={handleNew}
           disabled={navigating}
-          className="inline-flex h-9 items-center justify-center rounded-md bg-foreground px-3 text-sm font-medium text-background transition-colors hover:opacity-90 disabled:opacity-50"
+          className="inline-flex h-9 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           New Document
         </button>
@@ -91,7 +91,7 @@ export default function Sidebar() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search documents"
-              className="h-9 w-full rounded-md border border-black/[.08] bg-transparent px-3 text-sm outline-none placeholder:text-zinc-400 focus:border-black/[.2] dark:border-white/[.145] dark:placeholder:text-zinc-600 dark:focus:border-white/[.3]"
+              className="h-9 w-full rounded-md border border-border bg-transparent px-3 text-sm outline-none placeholder:text-muted focus:border-accent"
             />
           </>
         )}
@@ -100,25 +100,19 @@ export default function Sidebar() {
       {/* Document list — loading / empty / error / no-match / list states */}
       <div className="flex-1 overflow-y-auto px-3 py-4">
         {status === "loading" && (
-          <p className="px-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Loading…
-          </p>
+          <p className="px-2 text-sm text-muted">Loading…</p>
         )}
 
         {status === "error" && (
-          <p className="px-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Couldn&apos;t load documents.
-          </p>
+          <p className="px-2 text-sm text-muted">Couldn&apos;t load documents.</p>
         )}
 
         {status === "ready" && documents.length === 0 && (
-          <p className="px-2 text-sm text-zinc-500 dark:text-zinc-400">
-            No documents yet
-          </p>
+          <p className="px-2 text-sm text-muted">No documents yet</p>
         )}
 
         {status === "ready" && documents.length > 0 && filtered.length === 0 && (
-          <p className="px-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="px-2 text-sm text-muted">
             No documents match your search
           </p>
         )}
@@ -132,10 +126,10 @@ export default function Sidebar() {
                   <Link
                     href={`/docs/${doc.id}`}
                     aria-current={isActive ? "page" : undefined}
-                    className={`block truncate rounded-md px-2 py-1.5 text-sm transition-colors ${
+                    className={`block truncate rounded-md border-l-2 px-2.5 py-2 text-sm transition-colors ${
                       isActive
-                        ? "bg-black/[.06] font-medium dark:bg-white/[.10]"
-                        : "hover:bg-black/[.04] dark:hover:bg-white/[.06]"
+                        ? "border-accent bg-accent/10 font-medium text-accent"
+                        : "border-transparent text-foreground hover:bg-foreground/[.04]"
                     }`}
                   >
                     {doc.title || "Untitled"}
