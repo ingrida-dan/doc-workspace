@@ -51,6 +51,9 @@ export default function Sidebar() {
     setNavigating(true);
     const doc = await createDocument();
     if (doc) {
+      // Clear any active search so the new (blank, non-matching) doc is
+      // visible in the list instead of hidden behind a stale filter.
+      setQuery("");
       router.push(`/docs/${doc.id}`);
     } else {
       // Create failed — re-enable so the user can retry.
