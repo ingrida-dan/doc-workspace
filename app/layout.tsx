@@ -7,7 +7,7 @@ import "./globals.css";
 // the saved theme is applied with no flash of the wrong theme. Reads the same
 // localStorage "theme" key as ThemeProvider; "system"/absent resolves to the
 // OS preference. Keep in sync with ThemeProvider (THEME_STORAGE_KEY).
-const NO_FLASH_THEME_SCRIPT = `(function(){try{var c=localStorage.getItem('theme');var t=(c==='light'||c==='dark')?c:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
+const NO_FLASH_THEME_SCRIPT = `(function(){var t;try{t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}catch(e){t='light';}try{var c=localStorage.getItem('theme');if(c==='light'||c==='dark')t=c;}catch(e){}document.documentElement.setAttribute('data-theme',t);})();`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

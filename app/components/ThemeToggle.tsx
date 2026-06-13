@@ -12,7 +12,8 @@ const OPTIONS: { value: ThemeChoice; label: string }[] = [
 // current selection is unambiguous and "System" is discoverable.
 export default function ThemeToggle() {
   const { choice, setChoice, mounted } = useTheme();
-  // Before mount, show the deterministic "system" selection to match SSR.
+  // Until mounted, render the deterministic "system" selection so SSR and the
+  // first client render agree (no hydration mismatch on the selected button).
   const active = mounted ? choice : "system";
 
   return (

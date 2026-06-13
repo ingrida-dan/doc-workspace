@@ -19,7 +19,8 @@ type ThemeContextValue = {
   // The user's choice (what the toggle reflects).
   choice: ThemeChoice;
   setChoice: (choice: ThemeChoice) => void;
-  // False until after mount, so the toggle can avoid a hydration mismatch.
+  // False until after mount, so the toggle can render a deterministic value
+  // that matches SSR (avoids a hydration mismatch on the selected button).
   mounted: boolean;
 };
 
@@ -49,15 +50,19 @@ export default function ThemeProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // Deterministic initial value so server and first client render match
-  // (avoids a hydration mismatch on the toggle); synced from storage on mount.
+  // Deterministic "system" on both server and first client render, then adopt
+  // the stored choice on mount. The page COLORS are already correct pre-paint
+  // via the inline script; this state only drives the toggle's selected button.
   const [choice, setChoiceState] = useState<ThemeChoice>("system");
   const [mounted, setMounted] = useState(false);
 
-  // On mount, adopt the stored choice (the colors are already correct via the
-  // inline script — this only aligns React state / the toggle UI).
   useEffect(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(THEME_STORAGE_KEY);
+    } catch {
+      // Storage unavailable — keep the default.
+    }
     if (stored === "light" || stored === "dark" || stored === "system") {
       setChoiceState(stored);
     }
@@ -68,7 +73,11 @@ export default function ThemeProvider({
   useEffect(() => {
     if (!mounted) return;
     applyTheme(resolve(choice));
-    localStorage.setItem(THEME_STORAGE_KEY, choice);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, choice);
+    } catch {
+      // Storage unavailable — the theme still applies for this session.
+    }
   }, [choice, mounted]);
 
   // In system mode, follow OS changes live.
