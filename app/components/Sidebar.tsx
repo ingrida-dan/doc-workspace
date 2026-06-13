@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDocuments } from "./DocumentsProvider";
+import ThemeToggle from "./ThemeToggle";
 
 // Minimum gap between document creations. Guards against a rapid double-click
 // creating two blank docs (see handleNew).
@@ -68,6 +69,7 @@ export default function Sidebar() {
         <h1 className="text-base font-semibold tracking-tight">
           Doc Workspace
         </h1>
+        <ThemeToggle />
         <button
           type="button"
           onClick={handleNew}
