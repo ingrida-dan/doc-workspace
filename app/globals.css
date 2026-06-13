@@ -50,6 +50,18 @@ body {
   line-height: 1.6;
 }
 
+/* Sidebar focus: remove the browser-default (blue) outline and use the accent
+   for keyboard focus only — so clicking a document shows the soft tint
+   highlight without a hard outlined box, while keyboard users still get a
+   clear accent focus ring. */
+#workspace-sidebar :focus {
+  outline: none;
+}
+#workspace-sidebar :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Rendered Markdown preview. react-markdown emits bare semantic tags that
    Tailwind's reset leaves unstyled; this scopes readable defaults to the
    preview container. Colors follow the foreground token, so light/dark
@@ -60,6 +72,7 @@ body {
 .markdown-preview h1,
 .markdown-preview h2,
 .markdown-preview h3 {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
   font-weight: 600;
   line-height: 1.25;
   margin: 1.4em 0 0.5em;
@@ -91,12 +104,9 @@ body {
   margin: 0.25em 0;
 }
 .markdown-preview a {
-  color: #2563eb;
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-:root[data-theme="dark"] .markdown-preview a {
-  color: #60a5fa;
 }
 .markdown-preview strong {
   font-weight: 600;
