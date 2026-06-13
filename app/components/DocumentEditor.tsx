@@ -37,6 +37,19 @@ export default function DocumentEditor({ id }: { id: string }) {
   // Set once the document is deleted, so no pending/late auto-save can write
   // (and resurrect) it afterwards.
   const deletedRef = useRef(false);
+  // The body textarea, so Enter in the title can move focus to it.
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  // When Enter is pressed in the title while in preview mode, we switch to
+  // edit first and focus the textarea once it has mounted (see effect below).
+  const focusBodyAfterEditRef = useRef(false);
+
+  // Focus the body once we've switched into edit mode from a title Enter.
+  useEffect(() => {
+    if (mode === "edit" && focusBodyAfterEditRef.current) {
+      focusBodyAfterEditRef.current = false;
+      bodyRef.current?.focus();
+    }
+  }, [mode]);
 
   // Load the document once, in the browser, after mount.
   useEffect(() => {
@@ -115,6 +128,21 @@ export default function DocumentEditor({ id }: { id: string }) {
     scheduleSave({ title, body: value });
   };
 
+  // Enter in the (single-line) title jumps focus to the body. Shift+Enter and
+  // IME composition are left alone. preventDefault stops any implicit submit.
+  const onTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    if (mode === "preview") {
+      // The textarea isn't mounted in preview — switch to edit, then the
+      // effect focuses it once it renders.
+      focusBodyAfterEditRef.current = true;
+      setMode("edit");
+    } else {
+      bodyRef.current?.focus();
+    }
+  };
+
   // Delete wins over any pending auto-save. Synchronously (before any await)
   // mark the doc deleted, cancel the debounce timer, and drop the pending
   // payload so neither a scheduled flush nor the unmount cleanup can re-write
@@ -164,6 +192,7 @@ export default function DocumentEditor({ id }: { id: string }) {
           type="text"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
+          onKeyDown={onTitleKeyDown}
           placeholder="Untitled"
           aria-label="Document title"
           className="min-w-0 flex-1 bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
@@ -230,6 +259,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       {/* Body — raw Markdown textarea (edit) or rendered preview */}
       {mode === "edit" ? (
         <textarea
+          ref={bodyRef}
           value={body}
           onChange={(e) => onBodyChange(e.target.value)}
           placeholder="Start writing…"
