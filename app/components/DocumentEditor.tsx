@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { getDocument } from "@/lib/documents";
 import { useDocuments } from "./DocumentsProvider";
@@ -14,17 +15,23 @@ const SAVE_DEBOUNCE_MS = 500;
 // shows an editable title + body, and auto-saves debounced changes through the
 // shared store so the sidebar stays in sync.
 export default function DocumentEditor({ id }: { id: string }) {
-  const { updateDocument } = useDocuments();
+  const { updateDocument, deleteDocument } = useDocuments();
+  const router = useRouter();
 
   const [loadStatus, setLoadStatus] = useState<LoadStatus>("loading");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  // Two-step delete confirmation, local to this editor instance.
+  const [confirming, setConfirming] = useState(false);
 
   // Debounce machinery: the pending change and the active timer, kept in refs
   // so they survive re-renders without re-scheduling.
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<{ title: string; body: string } | null>(null);
+  // Set once the document is deleted, so no pending/late auto-save can write
+  // (and resurrect) it afterwards.
+  const deletedRef = useRef(false);
 
   // Load the document once, in the browser, after mount.
   useEffect(() => {
@@ -54,6 +61,8 @@ export default function DocumentEditor({ id }: { id: string }) {
       clearTimeout(saveTimer.current);
       saveTimer.current = null;
     }
+    // Never write a document that's been deleted.
+    if (deletedRef.current) return;
     const payload = pendingRef.current;
     if (!payload) return;
     pendingRef.current = null;
@@ -72,7 +81,7 @@ export default function DocumentEditor({ id }: { id: string }) {
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      if (pendingRef.current) {
+      if (!deletedRef.current && pendingRef.current) {
         updateDocument(id, pendingRef.current).catch(() => {});
         pendingRef.current = null;
       }
@@ -95,6 +104,21 @@ export default function DocumentEditor({ id }: { id: string }) {
   const onBodyChange = (value: string) => {
     setBody(value);
     scheduleSave({ title, body: value });
+  };
+
+  // Delete wins over any pending auto-save. Synchronously (before any await)
+  // mark the doc deleted, cancel the debounce timer, and drop the pending
+  // payload so neither a scheduled flush nor the unmount cleanup can re-write
+  // it. Then delete and leave the now-dead URL.
+  const handleConfirmDelete = async () => {
+    deletedRef.current = true;
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    pendingRef.current = null;
+    await deleteDocument(id);
+    router.push("/docs");
   };
 
   if (loadStatus === "loading") {
@@ -144,6 +168,35 @@ export default function DocumentEditor({ id }: { id: string }) {
           {saveStatus === "unsaved" && "Unsaved changes"}
           {saveStatus === "error" && "Save failed"}
         </span>
+
+        {/* Delete — destructive, kept visually distinct from the edit fields */}
+        {confirming ? (
+          <div className="flex shrink-0 items-center gap-2 text-sm">
+            <span className="text-zinc-500 dark:text-zinc-400">Delete?</span>
+            <button
+              type="button"
+              onClick={handleConfirmDelete}
+              className="rounded-md bg-red-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-red-700"
+            >
+              Confirm
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              className="rounded-md px-2.5 py-1 text-xs font-medium text-zinc-500 transition-colors hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="shrink-0 rounded-md border border-red-600/40 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-600/10 dark:text-red-400"
+          >
+            Delete
+          </button>
+        )}
       </div>
 
       {/* Body editor — plain textarea (Markdown preview comes later) */}

@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   createDocument as createDocumentRecord,
+  deleteDocument as deleteDocumentRecord,
   getAllDocuments,
   updateDocument as updateDocumentRecord,
 } from "@/lib/documents";
@@ -28,6 +29,7 @@ type DocumentsContextValue = {
     id: string,
     changes: DocumentChanges,
   ) => Promise<DocumentRecord>;
+  deleteDocument: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
 };
 
@@ -115,6 +117,13 @@ export default function DocumentsProvider({
     [],
   );
 
+  // Permanently delete a document and drop it from the in-memory list so the
+  // sidebar updates immediately.
+  const deleteDocument = useCallback(async (id: string) => {
+    await deleteDocumentRecord(id);
+    setDocuments((prev) => prev.filter((d) => d.id !== id));
+  }, []);
+
   return (
     <DocumentsContext.Provider
       value={{
@@ -123,6 +132,7 @@ export default function DocumentsProvider({
         isCreating,
         createDocument,
         updateDocument,
+        deleteDocument,
         refresh,
       }}
     >
