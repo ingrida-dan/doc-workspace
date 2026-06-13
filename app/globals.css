@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/* Drive Tailwind's `dark:` variant from an explicit data-theme attribute set
+   on <html> (by the no-flash inline script and ThemeProvider), instead of the
+   default prefers-color-scheme. "System" is resolved to light/dark in JS, so
+   the attribute is always the effective theme. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+/* Explicit dark theme. data-theme is always the resolved light/dark value, so
+   tokens and `dark:` utilities stay consistent across light/dark/system. */
+:root[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -10,13 +23,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
@@ -70,10 +76,8 @@ body {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-@media (prefers-color-scheme: dark) {
-  .markdown-preview a {
-    color: #60a5fa;
-  }
+:root[data-theme="dark"] .markdown-preview a {
+  color: #60a5fa;
 }
 .markdown-preview strong {
   font-weight: 600;
