@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { getDocument } from "@/lib/documents";
 import { useDocuments } from "./DocumentsProvider";
 
 type LoadStatus = "loading" | "ready" | "notfound" | "error";
 type SaveStatus = "saved" | "unsaved" | "saving" | "error";
+type Mode = "edit" | "preview";
 
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -24,6 +26,9 @@ export default function DocumentEditor({ id }: { id: string }) {
   const [body, setBody] = useState("");
   // Two-step delete confirmation, local to this editor instance.
   const [confirming, setConfirming] = useState(false);
+  // Edit vs. rendered-Markdown preview for the body. View-only state; edit
+  // is the default and editing only happens in edit mode.
+  const [mode, setMode] = useState<Mode>("edit");
 
   // Debounce machinery: the pending change and the active timer, kept in refs
   // so they survive re-renders without re-scheduling.
@@ -32,6 +37,19 @@ export default function DocumentEditor({ id }: { id: string }) {
   // Set once the document is deleted, so no pending/late auto-save can write
   // (and resurrect) it afterwards.
   const deletedRef = useRef(false);
+  // The body textarea, so Enter in the title can move focus to it.
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  // When Enter is pressed in the title while in preview mode, we switch to
+  // edit first and focus the textarea once it has mounted (see effect below).
+  const focusBodyAfterEditRef = useRef(false);
+
+  // Focus the body once we've switched into edit mode from a title Enter.
+  useEffect(() => {
+    if (mode === "edit" && focusBodyAfterEditRef.current) {
+      focusBodyAfterEditRef.current = false;
+      bodyRef.current?.focus();
+    }
+  }, [mode]);
 
   // Load the document once, in the browser, after mount.
   useEffect(() => {
@@ -110,6 +128,21 @@ export default function DocumentEditor({ id }: { id: string }) {
     scheduleSave({ title, body: value });
   };
 
+  // Enter in the (single-line) title jumps focus to the body. Shift+Enter and
+  // IME composition are left alone. preventDefault stops any implicit submit.
+  const onTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    if (mode === "preview") {
+      // The textarea isn't mounted in preview — switch to edit, then the
+      // effect focuses it once it renders.
+      focusBodyAfterEditRef.current = true;
+      setMode("edit");
+    } else {
+      bodyRef.current?.focus();
+    }
+  };
+
   // Delete wins over any pending auto-save. Synchronously (before any await)
   // mark the doc deleted, cancel the debounce timer, and drop the pending
   // payload so neither a scheduled flush nor the unmount cleanup can re-write
@@ -159,6 +192,7 @@ export default function DocumentEditor({ id }: { id: string }) {
           type="text"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
+          onKeyDown={onTitleKeyDown}
           placeholder="Untitled"
           aria-label="Document title"
           className="min-w-0 flex-1 bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
@@ -203,14 +237,52 @@ export default function DocumentEditor({ id }: { id: string }) {
         )}
       </div>
 
-      {/* Body editor — plain textarea (Markdown preview comes later) */}
-      <textarea
-        value={body}
-        onChange={(e) => onBodyChange(e.target.value)}
-        placeholder="Start writing…"
-        aria-label="Document body"
-        className="flex-1 resize-none bg-transparent px-6 py-5 font-mono text-sm leading-6 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
-      />
+      {/* Edit / Preview toggle for the body */}
+      <div className="flex shrink-0 gap-1 border-b border-black/[.08] px-6 py-2 dark:border-white/[.145]">
+        {(["edit", "preview"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            aria-pressed={mode === m}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-colors ${
+              mode === m
+                ? "bg-black/[.06] dark:bg-white/[.10]"
+                : "text-zinc-500 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]"
+            }`}
+          >
+            {m}
+          </button>
+        ))}
+      </div>
+
+      {/* Body — raw Markdown textarea (edit) or rendered preview */}
+      {mode === "edit" ? (
+        <textarea
+          ref={bodyRef}
+          value={body}
+          onChange={(e) => onBodyChange(e.target.value)}
+          placeholder="Start writing…"
+          aria-label="Document body"
+          className="flex-1 resize-none bg-transparent px-6 py-5 font-mono text-sm leading-6 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+        />
+      ) : (
+        <div className="markdown-preview flex-1 overflow-y-auto px-6 py-5 text-sm leading-6">
+          {/* Safe by default: no rehype-raw, so raw HTML in the body is shown
+              as text, not injected. Links open in a new tab. */}
+          <ReactMarkdown
+            components={{
+              a({ node, ...props }) {
+                return (
+                  <a {...props} target="_blank" rel="noopener noreferrer" />
+                );
+              },
+            }}
+          >
+            {body}
+          </ReactMarkdown>
+        </div>
+      )}
     </div>
   );
 }

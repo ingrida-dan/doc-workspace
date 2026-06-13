@@ -24,3 +24,89 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Rendered Markdown preview. react-markdown emits bare semantic tags that
+   Tailwind's reset leaves unstyled; this scopes readable defaults to the
+   preview container. Colors follow the foreground token, so light/dark
+   mode is inherited. Basic Markdown only (no tables/task lists yet). */
+.markdown-preview > :first-child {
+  margin-top: 0;
+}
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 1.4em 0 0.5em;
+}
+.markdown-preview h1 {
+  font-size: 1.6em;
+}
+.markdown-preview h2 {
+  font-size: 1.35em;
+}
+.markdown-preview h3 {
+  font-size: 1.15em;
+}
+.markdown-preview p {
+  margin: 0.75em 0;
+}
+.markdown-preview ul,
+.markdown-preview ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+}
+.markdown-preview ul {
+  list-style: disc;
+}
+.markdown-preview ol {
+  list-style: decimal;
+}
+.markdown-preview li {
+  margin: 0.25em 0;
+}
+.markdown-preview a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+@media (prefers-color-scheme: dark) {
+  .markdown-preview a {
+    color: #60a5fa;
+  }
+}
+.markdown-preview strong {
+  font-weight: 600;
+}
+.markdown-preview em {
+  font-style: italic;
+}
+.markdown-preview blockquote {
+  margin: 0.75em 0;
+  padding-left: 1em;
+  border-left: 3px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+.markdown-preview code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.9em;
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+.markdown-preview pre {
+  margin: 0.75em 0;
+  padding: 0.85em 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+.markdown-preview pre code {
+  padding: 0;
+  background: none;
+}
+.markdown-preview hr {
+  margin: 1.5em 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}

@@ -24,3 +24,25 @@ I'm storing documents in **IndexedDB**, the browser's built-in database, using t
 ### Sub-decisions made
 - **Raw IndexedDB, no wrapper library** — my project rules say not to add dependencies without a good reason, and for a single store of documents the raw API is manageable. I'd rather keep the dependency list empty and only reach for a small helper later if the code actually gets unwieldy.
 - **Deferred export/import** — it's listed as an optional task in the project brief, and I want to focus on the core app first. I know it doubles as my safety net against browser data loss, so I'll revisit it once the basics are solid.
+
+## Markdown rendering decision
+
+### What I chose
+I'm using **react-markdown** to render the Markdown body in the editor's preview.
+
+### Why it fits this project
+- **Markdown is a core feature here, not an afterthought.** I don't want the central feature of the app to be its buggiest, most edge-case-prone part. A battle-tested parser gets all the fiddly rules — nested lists, mixed bold/italic, escaped characters — right for free, instead of me rediscovering them one bug at a time.
+- **It's safe by default.** It builds a React element tree instead of injecting an HTML string, so there's no `dangerouslySetInnerHTML` anywhere and no injection seam. It ignores raw HTML unless I explicitly opt in, which is exactly the default I want.
+- **It's the natural React fit.** The alternatives make me bridge an HTML string into React and own sanitization myself. react-markdown *is* React — less friction, fewer footguns.
+
+### The dependency decision
+My AGENTS.md says no new dependencies without a deliberate reason. This is that deliberate reason. Correct, secure Markdown rendering is genuinely hard to do by hand, and it's a core feature of the app — not a convenience I could shrug off. That combination is a conscious, defensible reason to add this specific dependency, which is precisely the bar my own rule is asking me to clear.
+
+### Alternatives considered
+- **Hand-rolling a small renderer** — keeps my dependency list at zero, which is tempting. But it's counterintuitively *less* safe: the danger isn't the tags I render, it's dangerous URL schemes (`javascript:`, `data:`) and attribute escaping, which a hand-rolled renderer omits by default unless I remember every one. And Markdown's grammar isn't regex-friendly, so a custom renderer quietly mangles the edge cases. It would only be worth it if a minimal Markdown subset were a deliberate, permanent product boundary — and it isn't.
+- **marked / markdown-it** — excellent, battle-tested parsers. But they output an HTML string, which forces me back to `dangerouslySetInnerHTML` plus a separate sanitizer (DOMPurify) to be safe. That's more dependencies and a manual safety step I'd have to get right every time — strictly more risk and ceremony than react-markdown for a React app.
+
+### Sharp edges I'm watching for
+- **The security risk is low today, but latent.** For my single-user, local, own-content app, the classic XSS scenario basically doesn't exist right now. But the moment I paste Markdown from a webpage or an AI output, "my own content" stops being true. Safe-by-default costs me nothing now and would be painful to retrofit, so I'm taking it while it's free.
+- **Rendered Markdown comes out as bare HTML tags.** Tailwind's reset strips them unstyled, so the preview will look like naked HTML until I style it deliberately — I need to plan for that, not be surprised by it.
+- **SSR/hydration.** My content is browser-only (IndexedDB), so the preview must live in a client component. I'll keep the whole edit/preview component client-side to avoid the server rendering one thing and the client rendering another, which is what causes hydration mismatches.
