@@ -69,7 +69,11 @@ export default function DocumentEditor({ id }: { id: string }) {
     setSaveStatus("saving");
     try {
       await updateDocument(id, payload);
-      setSaveStatus("saved");
+      // Only claim "saved" if no new edit was queued while this save was in
+      // flight. If the user typed during the await, pendingRef is set again
+      // (and scheduleSave already marked it "unsaved") — the next timer will
+      // persist it; don't overwrite that with a false "Saved".
+      setSaveStatus(pendingRef.current === null ? "saved" : "unsaved");
     } catch {
       setSaveStatus("error");
     }

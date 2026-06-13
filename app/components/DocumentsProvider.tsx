@@ -23,14 +23,12 @@ type DocumentChanges = Partial<Pick<DocumentRecord, "title" | "body">>;
 type DocumentsContextValue = {
   documents: DocumentRecord[];
   status: LoadStatus;
-  isCreating: boolean;
   createDocument: () => Promise<DocumentRecord | null>;
   updateDocument: (
     id: string,
     changes: DocumentChanges,
   ) => Promise<DocumentRecord>;
   deleteDocument: (id: string) => Promise<void>;
-  refresh: () => Promise<void>;
 };
 
 const DocumentsContext = createContext<DocumentsContextValue | null>(null);
@@ -47,10 +45,8 @@ export default function DocumentsProvider({
   // Deterministic initial state so server and client first renders match.
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [status, setStatus] = useState<LoadStatus>("loading");
-  const [isCreating, setIsCreating] = useState(false);
-  // Synchronous mirror of isCreating. `isCreating` state only disables the
-  // button after a re-render, which is too late to stop a second click in the
-  // same tick; this ref is checked synchronously so the second click bails.
+  // Synchronous in-flight guard for createDocument: checked before any await
+  // so a same-tick second call bails before the first one returns.
   const isCreatingRef = useRef(false);
 
   // Load the list once, in the browser, after mount.
@@ -71,17 +67,6 @@ export default function DocumentsProvider({
     };
   }, []);
 
-  // Re-read the full list from storage (exposed for later sub-steps).
-  const refresh = useCallback(async () => {
-    try {
-      const docs = await getAllDocuments();
-      setDocuments(docs);
-      setStatus("ready");
-    } catch {
-      setStatus("error");
-    }
-  }, []);
-
   // Create a blank document and prepend it. The new record has the newest
   // updatedAt, so prepending matches the data layer's updatedAt-desc order —
   // no refetch needed.
@@ -90,7 +75,6 @@ export default function DocumentsProvider({
     // rapid double-click that fires before the disabled state re-renders.
     if (isCreatingRef.current) return null;
     isCreatingRef.current = true;
-    setIsCreating(true);
     try {
       const doc = await createDocumentRecord();
       setDocuments((prev) => [doc, ...prev]);
@@ -100,7 +84,6 @@ export default function DocumentsProvider({
       return null;
     } finally {
       isCreatingRef.current = false;
-      setIsCreating(false);
     }
   }, []);
 
@@ -129,11 +112,9 @@ export default function DocumentsProvider({
       value={{
         documents,
         status,
-        isCreating,
         createDocument,
         updateDocument,
         deleteDocument,
-        refresh,
       }}
     >
       {children}

@@ -72,6 +72,10 @@ export async function updateDocument(
   changes: Partial<Pick<DocumentRecord, "title" | "body">>,
 ): Promise<DocumentRecord> {
   return withStore("readwrite", async (store) => {
+    // The get-then-put spans an await: only IndexedDB-request promises may be
+    // awaited inside a transaction. Awaiting a fetch/setTimeout/other non-IDB
+    // promise here would let the transaction auto-commit, so the later put()
+    // would throw "transaction is not active".
     const existing = await promisifyRequest<DocumentRecord | undefined>(
       store.get(id),
     );
