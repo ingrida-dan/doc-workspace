@@ -11,16 +11,23 @@ import {
 import {
   createDocument as createDocumentRecord,
   getAllDocuments,
+  updateDocument as updateDocumentRecord,
 } from "@/lib/documents";
 import type { DocumentRecord } from "@/lib/types";
 
 type LoadStatus = "loading" | "ready" | "error";
+
+type DocumentChanges = Partial<Pick<DocumentRecord, "title" | "body">>;
 
 type DocumentsContextValue = {
   documents: DocumentRecord[];
   status: LoadStatus;
   isCreating: boolean;
   createDocument: () => Promise<DocumentRecord | null>;
+  updateDocument: (
+    id: string,
+    changes: DocumentChanges,
+  ) => Promise<DocumentRecord>;
   refresh: () => Promise<void>;
 };
 
@@ -95,9 +102,29 @@ export default function DocumentsProvider({
     }
   }, []);
 
+  // Persist a title/body change and reflect it in the in-memory list so the
+  // sidebar shows the new title. Updated in place (no re-sort) so the item
+  // being edited doesn't jump to the top on every save; updatedAt-desc order
+  // re-applies on the next full load.
+  const updateDocument = useCallback(
+    async (id: string, changes: DocumentChanges) => {
+      const updated = await updateDocumentRecord(id, changes);
+      setDocuments((prev) => prev.map((d) => (d.id === id ? updated : d)));
+      return updated;
+    },
+    [],
+  );
+
   return (
     <DocumentsContext.Provider
-      value={{ documents, status, isCreating, createDocument, refresh }}
+      value={{
+        documents,
+        status,
+        isCreating,
+        createDocument,
+        updateDocument,
+        refresh,
+      }}
     >
       {children}
     </DocumentsContext.Provider>
